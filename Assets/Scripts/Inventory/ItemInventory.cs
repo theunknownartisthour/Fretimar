@@ -7,17 +7,16 @@ public class ItemInventory : MonoBehaviour {
 
 	public List<Item> items;
 	public List<Item> equipped;
-	/*
-	public List<ItemIdentifier> items;
-	public List<ItemEffect> itemEffects;
-	*/
 	
 	private string findType = "";
 	private string findName = "";
+
+	/*So we can drop items back out of the inventory*/
+	public Rigidbody rb;
 	
 	// Use this for initialization
 	void Start () {
-	
+		Rigidbody rb = GetComponent<Rigidbody>();
 	}
 	
 	// Update is called once per frame
@@ -49,7 +48,7 @@ public class ItemInventory : MonoBehaviour {
 	}
 	
 	/*Take an object (presuably in the inventory's list of equipped items) and add it back to the list of items*/
-	public void DeEquip(Item itemObject){
+	public void Unequip(Item itemObject){
 		int index = equipped.IndexOf (itemObject);
 		if (index >= 0) {
 			if(itemObject.isDequippable){
@@ -66,11 +65,16 @@ public class ItemInventory : MonoBehaviour {
 
 	/*Looks for an exact match with a similar object*/
 	public bool HasInInventory(Item itemObject){
-		if (items.IndexOf (itemObject) >= 0) {
+		if (IndexInInventory (itemObject) >= 0) {
 			return true;
 		} else {
 			return false;
 		}
+	}
+
+	/*Looks for an exact match with a similar object*/
+	public int IndexInInventory(Item itemObject){
+		return items.IndexOf (itemObject);
 	}
 
 	/*Looks for an exact match by checking the Item.identification*/
@@ -119,5 +123,36 @@ public class ItemInventory : MonoBehaviour {
 	public void AddItem(Item itemObject){
 		items.Add(itemObject);
 	}
-	
+
+	/*Attempts to remove an item from the list if it exists, returns the index removed, -2 if the item wasn't found or -1 if there was nothing in that slot*/
+	public int RemoveItem(Item itemObject){
+		int index = items.IndexOf (itemObject);
+		if (index >= 0) {
+			return RemoveItem (index);
+		} else {
+			return -2;
+		}
+	}
+
+	/*Removes an item if possible, returns eaither the index of the item removed or -1 if it failed*/
+	public int RemoveItem(int index){
+		if (index < items.Count) {
+			items.RemoveAt (index);
+			return index;
+		} else {
+			/*Compain there's nothing in this slot to remove!*/
+			return -1;
+		}       
+	}
+
+	public int DropItem(Item itemObject){
+		if (RemoveItem (itemObject) >= 0) {
+			Vector3 spawnPoint = rb.transform.position.forward;
+			spawnPoint.Set(spawnPoint.x,spawnPoint.y+1,spawnPoint.z);
+			itemObject.transform.position = spawnPoint;
+
+			Instantiate(itemObject);
+		}
+	}
+
 }
